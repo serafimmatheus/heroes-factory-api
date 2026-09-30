@@ -1,14 +1,24 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
+  engineType = "library"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
+}
+
+model Hero {
+  id            String   @id @default(uuid())
+  name          String
+  nickname      String
+  date_of_birth DateTime
+  universe      String
+  main_power    String
+  avatar_url    String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("heroes")
 }
