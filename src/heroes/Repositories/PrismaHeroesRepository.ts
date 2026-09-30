@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "../../../generated/prisma/index.js"
 import { IHeroesRepository } from "./contracts/IHeroesRepository.js"
 import { CreateHeroInput, HeroType, UpdateHeroInput } from "../../schemas/hero.schema.js"
 
@@ -69,6 +69,12 @@ export class PrismaHeroesRepository implements IHeroesRepository {
     await this.prisma.hero.update({
       where: { id },
       data: { is_active: true },
+    })
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.hero.delete({
+      where: { id },
     })
   }
 }

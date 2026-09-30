@@ -15,6 +15,7 @@ import { GetHeroById } from './heroes/UseCases/GetHeroById.js'
 import { UpdateHero } from './heroes/UseCases/UpdateHero.js'
 import { DeactivateHero } from './heroes/UseCases/DeactivateHero.js'
 import { ActivateHero } from './heroes/UseCases/ActivateHero.js'
+import { DeleteHero } from './heroes/UseCases/DeleteHero.js'
 import { heroesRoutes } from './heroes/Routes/heroes.js'
 
 const app = Fastify({ logger: true })
@@ -49,6 +50,7 @@ const getHeroById = new GetHeroById(heroesRepository)
 const updateHero = new UpdateHero(heroesRepository)
 const deactivateHero = new DeactivateHero(heroesRepository)
 const activateHero = new ActivateHero(heroesRepository)
+const deleteHero = new DeleteHero(heroesRepository)
 
 app.register(heroesRoutes, {
   createHero,
@@ -57,6 +59,7 @@ app.register(heroesRoutes, {
   updateHero,
   deactivateHero,
   activateHero,
+  deleteHero,
 })
 
 const start = async () => {

@@ -68,4 +68,8 @@ export class InMemoryHeroesRepository implements IHeroesRepository {
       hero.updated_at = new Date()
     }
   }
+
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter(h => h.id !== id)
+  }
 }

@@ -7,4 +7,5 @@ export interface IHeroesRepository {
   list(params: { page: number; limit: number; search?: string }): Promise<{ data: HeroType[]; total: number }>
   deactivate(id: string): Promise<void>
   activate(id: string): Promise<void>
+  delete(id: string): Promise<void>
 }

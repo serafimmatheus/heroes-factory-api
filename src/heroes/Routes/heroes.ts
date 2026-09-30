@@ -8,6 +8,7 @@ import { GetHeroById } from '../UseCases/GetHeroById.js'
 import { UpdateHero } from '../UseCases/UpdateHero.js'
 import { DeactivateHero } from '../UseCases/DeactivateHero.js'
 import { ActivateHero } from '../UseCases/ActivateHero.js'
+import { DeleteHero } from '../UseCases/DeleteHero.js'
 import { ErrorNotFound } from '../../errors/ErrorNotFound.js'
 import { ErrorBadRequest } from '../../errors/ErrorBadRequest.js'
 
@@ -18,6 +19,7 @@ export interface HeroesRoutesOptions {
   updateHero: UpdateHero
   deactivateHero: DeactivateHero
   activateHero: ActivateHero
+  deleteHero: DeleteHero
 }
 
 export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOptions) {
@@ -68,6 +70,7 @@ export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOp
       }),
       response: {
         200: HeroResponseSchema,
+        404: z.object({ error: z.string() }),
       },
     },
   }, async (request, reply) => {
@@ -76,7 +79,7 @@ export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOp
       return reply.send(hero)
     } catch (error) {
       if (error instanceof ErrorNotFound) {
-        return reply.status(400).send({ error: error.message })
+        return reply.status(404).send({ error: error.message })
       }
       throw error
     }
@@ -93,6 +96,8 @@ export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOp
       body: UpdateHeroInputSchema,
       response: {
         200: HeroResponseSchema,
+        400: z.object({ error: z.string() }),
+        404: z.object({ error: z.string() }),
       },
     },
   }, async (request, reply) => {
@@ -110,7 +115,7 @@ export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOp
     }
   })
 
-  server.delete('/heroes/:id', {
+  server.patch('/heroes/:id/deactivate', {
     schema: {
       tags: ['Heroes'],
       summary: 'Deactivate a hero',
@@ -120,12 +125,38 @@ export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOp
       }),
       response: {
         200: z.object({ message: z.string() }),
+        404: z.object({ error: z.string() }),
       },
     },
   }, async (request, reply) => {
     try {
       await options.deactivateHero.execute(request.params.id)
       return reply.send({ message: 'Hero deactivated' })
+    } catch (error) {
+      if (error instanceof ErrorNotFound) {
+        return reply.status(404).send({ error: error.message })
+      }
+      throw error
+    }
+  })
+
+  server.delete('/heroes/:id', {
+    schema: {
+      tags: ['Heroes'],
+      summary: 'Delete a hero',
+      description: 'Permanently deletes a hero',
+      params: z.object({
+        id: z.string().uuid(),
+      }),
+      response: {
+        200: z.object({ message: z.string() }),
+        404: z.object({ error: z.string() }),
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      await options.deleteHero.execute(request.params.id)
+      return reply.send({ message: 'Hero deleted' })
     } catch (error) {
       if (error instanceof ErrorNotFound) {
         return reply.status(404).send({ error: error.message })
@@ -144,6 +175,7 @@ export async function heroesRoutes(app: FastifyInstance, options: HeroesRoutesOp
       }),
       response: {
         200: z.object({ message: z.string() }),
+        404: z.object({ error: z.string() }),
       },
     },
   }, async (request, reply) => {
