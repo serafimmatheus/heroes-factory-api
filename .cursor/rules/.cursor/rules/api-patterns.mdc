@@ -1,0 +1,110 @@
+---
+description: Padrões de Routes, UseCases, Services, Repositories, schemas e erros
+globs: heroes-factory-api/src/**/*.ts
+alwaysApply: false
+---
+
+# Padrões da API (Arquitetura hexagonal + SOLID)
+
+## Inversão de dependência e injeção
+
+- UseCases e Services **não** importam implementações concretas (Prisma, etc.).
+- Dependências são **injetadas via construtor**.
+- Interfaces (ports) em `<dominio>/Repositories/contracts/`.
+- O `index.ts` (ou container de DI) monta as dependências e injeta nas rotas/useCases.
+
+## Organização por domínio
+
+- Cada domínio vive em `src/<dominio>/` com `Repositories/`, `UseCases/`, `Routes/`.
+- Exemplo: `src/workout-plan/` contém todo código de planos e sessões de treino.
+
+## Routes
+
+- Cada domínio em arquivo próprio: `<dominio>/Routes/<dominio>.ts` (ex: `workout-plan/Routes/workout-plan.ts`).
+- Usar `FastifyInstance` + `ZodTypeProvider` com `app.withTypeProvider<ZodTypeProvider>().route()`.
+- Sempre definir `schema.body`, `schema.response` (201, 400, 401, 404, 500).
+- **Documentação OpenAPI obrigatória** em cada rota: incluir no `schema`:
+  - `tags: ["Nome do Domínio"]` (ex: `["Workout Plan"]`)
+  - `summary`: título curto da operação (ex: "Start a workout session")
+  - `description`: descrição da operação
+
+```typescript
+schema: {
+  tags: ["Workout Plan"],
+  summary: "Start a workout session",
+  description: "Start a workout session",
+  params: StartWorkoutSessionParamsSchema,
+  response: { ... },
+}
+```
+- Autenticação: `auth.api.getSession({ headers: fromNodeHeaders(request.headers) })`.
+- Rotas protegidas: checar `session` e retornar 401 se ausente.
+- Tratar erros com `instanceof` (ex: `ErrorNotFound`) e mapear para códigos HTTP corretos.
+- Registrar rotas no `index.ts` com `prefix`; importar de `workout-plan/Routes/workout-plan.js`.
+- **Receber UseCases injetados** (via options ao registrar ou closure), não instanciar dentro do handler.
+
+## UseCases
+
+- Uma classe por caso de uso: `<dominio>/UseCases/<NomeDoCaso>.ts` (ex: `workout-plan/UseCases/StartWorkoutSession.ts`).
+- Método `execute(dto)` com interface de entrada tipada.
+- **Injeção via construtor**: receber Repositories e Services necessários.
+- Orquestrar lógica; delegação de persistência aos Repositories.
+- Lançar erros customizados (`ErrorNotFound`, etc.) para propagar até a Route.
+
+```typescript
+// ✅ Exemplo com DI
+export class CreateWorkoutPlan {
+  constructor(
+    private readonly workoutPlanRepository: IWorkoutPlanRepository,
+    private readonly someService?: ISomeService
+  ) {}
+
+  async execute(dto: CreateWorkoutPlanDataInput) {
+    const existing = await this.workoutPlanRepository.findActiveByUserId(dto.userId);
+    // ... lógica, delegar persistência ao repository
+  }
+}
+```
+
+## Services
+
+- `Services/`: lógica de domínio compartilhada entre UseCases (opcional; fica em `<dominio>/Services/` quando existir).
+- Regras de negócio que não cabem em um UseCase ou Repository isolado.
+- Também recebem dependências via construtor (ex: outros Services, Repositories).
+- Interfaces em `Services/contracts/` quando necessário para inversão.
+
+## Repositories
+
+- `<dominio>/Repositories/contracts/`: interfaces (ports), ex: `IWorkoutPlanRepository`.
+- `<dominio>/Repositories/`: implementações concretas (adapters), ex: `PrismaWorkoutPlanRepository`.
+- Encapsulam acesso a dados; UseCases não conhecem Prisma diretamente.
+- Implementações usam `prisma` de `lib/db.js` internamente.
+
+```typescript
+// workout-plan/Repositories/contracts/IWorkoutPlanRepository.ts
+export interface IWorkoutPlanRepository {
+  findActiveByUserId(userId: string): Promise<WorkoutPlan | null>;
+  create(data: CreateWorkoutPlanData): Promise<WorkoutPlan>;
+  // ...
+}
+
+// workout-plan/Repositories/PrismaWorkoutPlanRepository.ts
+export class PrismaWorkoutPlanRepository implements IWorkoutPlanRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+  async findActiveByUserId(userId: string) { ... }
+  // ...
+}
+```
+
+## Schemas (Zod)
+
+- Arquivos em `schemas/` com export de schemas reutilizáveis.
+- Usar `z.object()`, validações `.min()`, `.trim()` para strings.
+- **Enums do Prisma**: Sempre usar `z.enum(WeekDay)` (ou outro enum existente) importando de `generated/prisma/enums.js` — nunca `z.string()` para campos que representam enums do banco.
+- `ErrorSchema`: `z.object({ message: z.string(), code: z.string() })`.
+- Schemas de response consistentes com o body (omit `id` quando criar).
+
+## Erros
+
+- Classes que estendem `Error` com `name` e `statusCode`.
+- Exemplo: `ErrorNotFound` com `statusCode: 404`.

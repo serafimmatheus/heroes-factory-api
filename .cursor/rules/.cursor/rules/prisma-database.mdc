@@ -1,0 +1,36 @@
+---
+description: Padrões Prisma e banco de dados
+globs: heroes-factory-api/prisma/**/*
+alwaysApply: false
+---
+
+# Prisma e banco de dados
+
+## Configuração
+
+- **Prisma 7**: URL do banco em `prisma.config.ts`, não no schema.
+- **Client**: gerado em `src/generated/prisma` (não editar manualmente).
+- **Adapter**: `@prisma/adapter-pg` com `PrismaPg` para PostgreSQL.
+
+## Uso do cliente
+
+- Usar singleton `prisma` de `lib/db.js` **apenas nos Repositories** (adapters de persistência).
+- Repositories ficam em `<dominio>/Repositories/` (ex: `workout-plan/Repositories/`).
+- UseCases não importam Prisma; dependem de interfaces em `<dominio>/Repositories/contracts/`.
+- Em dev: reutilizar instância via `globalForPrisma`.
+- Transações: `prisma.$transaction(async (tx) => { ... })` dentro do Repository quando operações forem atômicas.
+
+## Schema
+
+- Enums em PascalCase: `WeekDay`, `MONDAY`, etc.
+- Campos: `@db.Timestamptz()` para `DateTime` em PostgreSQL.
+- Relações: usar `onDelete: Cascade` quando apropriado.
+- Não versionar `src/generated/prisma` no controle de versão (conforme `.gitignore`).
+
+## Comandos
+
+```bash
+pnpm prisma generate   # Regenerar client
+pnpm prisma migrate dev
+pnpm prisma studio     # UI do banco
+```

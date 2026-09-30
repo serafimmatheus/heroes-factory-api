@@ -1,0 +1,61 @@
+---
+description: Arquitetura e stack do projeto heroes-factory-api
+alwaysApply: true
+---
+
+# Projeto Heroes Factory
+
+## Visão geral
+
+API para Heroes Factory. Arquitetura hexagonal com inversão de dependências (SOLID).
+
+## Stack
+
+- **Runtime**: Node 22, ESM
+- **Framework**: Fastify 5
+- **Validação**: Zod + fastify-type-provider-zod
+- **ORM**: Prisma 7 (PostgreSQL)
+- **Auth**: Better Auth
+- **Documentação**: OpenAPI/Swagger + Scalar API Reference em `/api`
+- **Pacote**: pnpm
+
+## Arquitetura hexagonal + SOLID
+
+- **Inversão de dependência**: UseCases e Services dependem de interfaces (ports), não de implementações concretas.
+- **Injeção de dependências**: Repositories e Services são injetados via construtor nos UseCases.
+- **Camadas**: Routes → UseCases → Services (opcional) → Repositories (via interface).
+
+## Estrutura de pastas
+
+- **Organização por domínio**: cada domínio (ex: workout-plan) vive em pasta própria com suas camadas. Evita arquivos soltos; mantém coesão.
+- **Compartilhados na raiz**: schemas, errors, lib ficam em `src/` para reuso entre domínios.
+
+```
+heroes-factory-api/
+├── prisma/
+│   └── schema.prisma
+├── src/
+│   ├── index.ts              # Entrada, registra rotas, faz DI
+│   ├── workout-plan/         # Domínio workout-plan (planos e sessões de treino)
+│   │   ├── Repositories/
+│   │   │   ├── contracts/    # Interfaces (ports)
+│   │   │   ├── PrismaWorkoutPlanRepository.ts
+│   │   │   └── PrismaUserWorkoutSessionRepository.ts
+│   │   ├── UseCases/
+│   │   │   ├── CreateWorkoutPlan.ts
+│   │   │   └── StartWorkoutSession.ts
+│   │   └── Routes/
+│   │       └── workout-plan.ts
+│   ├── schemas/              # Schemas Zod (compartilhados)
+│   ├── errors/               # Erros customizados (compartilhados)
+│   ├── lib/                  # auth.ts, db.ts
+│   └── generated/prisma/    # Cliente Prisma (não editar)
+```
+
+- Novos domínios seguem o mesmo padrão: `src/<dominio>/Repositories/`, `UseCases/`, `Routes/`.
+
+## Convenções gerais
+
+- Variáveis sensíveis apenas em `.env`; nunca versionar.
+- Documentação em português.
+- Responder ao usuário em português.
