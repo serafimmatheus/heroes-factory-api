@@ -13,12 +13,14 @@ export const HeroResponseSchema = z.object({
   updated_at: z.date().or(z.string()),
 })
 
+const textValidation = z.string().min(1).max(100, "Máximo de 100 caracteres").regex(/^[a-zA-ZÀ-ÿ0-9\s\-',.]+$/, "Apenas letras, números e espaços");
+
 export const CreateHeroInputSchema = z.object({
-  name: z.string().min(1),
-  nickname: z.string().min(1),
+  name: textValidation,
+  nickname: textValidation,
   date_of_birth: z.string().datetime().or(z.string()),
-  universe: z.string().min(1),
-  main_power: z.string().min(1),
+  universe: textValidation,
+  main_power: textValidation,
   avatar_url: z.string().url().refine(val => {
     return !val || /\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i.test(val) || val.includes('ui-avatars.com');
   }, "Deve ser um link de imagem (jpg, png, etc)").nullable().optional(),
@@ -27,11 +29,11 @@ export const CreateHeroInputSchema = z.object({
 export type CreateHeroInput = z.infer<typeof CreateHeroInputSchema>
 
 export const UpdateHeroInputSchema = z.object({
-  name: z.string().min(1).optional(),
-  nickname: z.string().min(1).optional(),
+  name: textValidation.optional(),
+  nickname: textValidation.optional(),
   date_of_birth: z.string().datetime().or(z.string()).optional(),
-  universe: z.string().min(1).optional(),
-  main_power: z.string().min(1).optional(),
+  universe: textValidation.optional(),
+  main_power: textValidation.optional(),
   avatar_url: z.string().url().refine(val => {
     return !val || /\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i.test(val) || val.includes('ui-avatars.com');
   }, "Deve ser um link de imagem (jpg, png, etc)").nullable().optional(),
