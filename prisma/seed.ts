@@ -138,6 +138,7 @@ async function main() {
       ...hero,
       date_of_birth: new Date(1970, 0, (index % 28) + 1),
       is_active: index % 5 !== 0,
+      avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(hero.name)}&background=random&color=fff&size=200`,
     }
   })
 
