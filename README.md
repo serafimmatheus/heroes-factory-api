@@ -47,7 +47,12 @@ O projeto foi desenhado seguindo princípios de **Clean Architecture (Arquitetur
    pnpm db:push
    ```
 
-4. Inicie o servidor em modo de desenvolvimento:
+4. Popule o banco de dados com os heróis iniciais (seed):
+   ```bash
+   pnpm prisma db seed
+   ```
+
+5. Inicie o servidor em modo de desenvolvimento:
    ```bash
    pnpm dev:server
    ```
