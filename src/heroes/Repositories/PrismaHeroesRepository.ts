@@ -50,7 +50,7 @@ export class PrismaHeroesRepository implements IHeroesRepository {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { created_at: 'desc' },
+        orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
       }),
       this.prisma.hero.count({ where }),
     ])
