@@ -19,7 +19,9 @@ export const CreateHeroInputSchema = z.object({
   date_of_birth: z.string().datetime().or(z.string()),
   universe: z.string().min(1),
   main_power: z.string().min(1),
-  avatar_url: z.string().url().nullable().optional(),
+  avatar_url: z.string().url().refine(val => {
+    return !val || /\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i.test(val) || val.includes('ui-avatars.com');
+  }, "Deve ser um link de imagem (jpg, png, etc)").nullable().optional(),
 })
 
 export type CreateHeroInput = z.infer<typeof CreateHeroInputSchema>
@@ -30,7 +32,9 @@ export const UpdateHeroInputSchema = z.object({
   date_of_birth: z.string().datetime().or(z.string()).optional(),
   universe: z.string().min(1).optional(),
   main_power: z.string().min(1).optional(),
-  avatar_url: z.string().url().nullable().optional(),
+  avatar_url: z.string().url().refine(val => {
+    return !val || /\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i.test(val) || val.includes('ui-avatars.com');
+  }, "Deve ser um link de imagem (jpg, png, etc)").nullable().optional(),
 })
 
 export type UpdateHeroInput = z.infer<typeof UpdateHeroInputSchema>
