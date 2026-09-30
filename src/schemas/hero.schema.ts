@@ -37,7 +37,9 @@ export type UpdateHeroInput = z.infer<typeof UpdateHeroInputSchema>
 
 export const PaginationSchema = z.object({
   page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).default(10),
+  limit: z.coerce.number().default(10).refine(val => [10, 20, 50, 100].includes(val), {
+    message: "Limit must be 10, 20, 50, or 100"
+  }),
   search: z.string().optional(),
 })
 
