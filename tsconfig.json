@@ -6,7 +6,12 @@
     "target": "ES2024",
     "skipLibCheck": true,
     "strict": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["jest"]
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }
